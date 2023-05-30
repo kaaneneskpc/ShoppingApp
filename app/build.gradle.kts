@@ -75,6 +75,7 @@ dependencies {
     //Dagger - Hilt
     implementation ("com.google.dagger:hilt-android:2.44")
     kapt ("com.google.dagger:hilt-android-compiler:2.44")
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
     //material icons - use with caution!
     implementation ("androidx.compose.material:material-icons-extended:1.2.0")
@@ -105,4 +106,18 @@ dependencies {
 
     //dataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    //navigation
+    implementation("androidx.navigation:navigation-compose:2.5.3")
+
+    //lifecycle compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
+
+    implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
+    implementation("com.google.firebase:firebase-analytics-ktx")
+
+    implementation("com.google.firebase:firebase-auth")
+
+    implementation("com.google.android.gms:play-services-auth:20.5.0")
 }

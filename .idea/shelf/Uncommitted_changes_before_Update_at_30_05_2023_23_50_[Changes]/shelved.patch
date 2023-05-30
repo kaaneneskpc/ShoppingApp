@@ -1,0 +1,439 @@
+Index: app/src/main/java/com/example/shoppingapp/feature/login/LoginViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.shoppingapp.feature.login\r\n\r\nclass LoginViewModel {\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/shoppingapp/feature/login/LoginViewModel.kt b/app/src/main/java/com/example/shoppingapp/feature/login/LoginViewModel.kt
+--- a/app/src/main/java/com/example/shoppingapp/feature/login/LoginViewModel.kt	(revision 6d3e6c25cdb171c0010501ff2a6341a265878962)
++++ b/app/src/main/java/com/example/shoppingapp/feature/login/LoginViewModel.kt	(date 1685479514595)
+@@ -1,4 +1,55 @@
+ package com.example.shoppingapp.feature.login
+ 
+-class LoginViewModel {
+-}
+\ No newline at end of file
++import androidx.lifecycle.ViewModel
++import androidx.lifecycle.viewModelScope
++import com.example.shoppingapp.core.common.Resource
++import com.example.shoppingapp.core.common.asResource
++import com.example.shoppingapp.domain.usecase.login.LoginUseCase
++import dagger.hilt.android.lifecycle.HiltViewModel
++import kotlinx.coroutines.flow.MutableStateFlow
++import kotlinx.coroutines.flow.launchIn
++import kotlinx.coroutines.flow.onEach
++import kotlinx.coroutines.launch
++import javax.inject.Inject
++
++@HiltViewModel
++class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase): ViewModel() {
++    private val _uiState: MutableStateFlow<LoginUIState> = MutableStateFlow(LoginUIState())
++    val uiState = _uiState
++
++    fun onEmailChange(email: String) {
++        _uiState.value = _uiState.value.copy(email = email)
++    }
++
++    fun onPasswordChange(password: String) {
++        _uiState.value = _uiState.value.copy(password = password)
++    }
++
++    fun onLogin() {
++        viewModelScope.launch {
++            loginUseCase(_uiState.value.email, _uiState.value.password)
++                .asResource()
++                .onEach { result ->
++                    when (result) {
++                        is Resource.Loading -> {
++                            _uiState.value = _uiState.value.copy(loading = true)
++                        }
++
++                        is Resource.Error -> {
++                            _uiState.value = _uiState.value.copy(loading = false)
++                        }
++
++                        is Resource.Success -> {
++                            _uiState.value = _uiState.value.copy(loading = false)
++                        }
++                    }
++                }.launchIn(this)
++        }
++    }
++}
++
++data class LoginUIState(
++    val loading: Boolean = false,
++    val email: String = "",
++    val password: String = ""
++)
+\ No newline at end of file
+Index: app/src/main/java/com/example/shoppingapp/feature/login/LoginScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.shoppingapp.feature.login\r\n\r\nclass LoginScreen {\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/shoppingapp/feature/login/LoginScreen.kt b/app/src/main/java/com/example/shoppingapp/feature/login/LoginScreen.kt
+--- a/app/src/main/java/com/example/shoppingapp/feature/login/LoginScreen.kt	(revision 6d3e6c25cdb171c0010501ff2a6341a265878962)
++++ b/app/src/main/java/com/example/shoppingapp/feature/login/LoginScreen.kt	(date 1685479713206)
+@@ -1,4 +1,114 @@
+ package com.example.shoppingapp.feature.login
+ 
+-class LoginScreen {
++import androidx.compose.foundation.layout.Arrangement
++import androidx.compose.foundation.layout.Column
++import androidx.compose.foundation.layout.Spacer
++import androidx.compose.foundation.layout.fillMaxSize
++import androidx.compose.foundation.layout.height
++import androidx.compose.foundation.layout.padding
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.filled.Email
++import androidx.compose.material.icons.filled.Lock
++import androidx.compose.material3.Divider
++import androidx.compose.material3.ExperimentalMaterial3Api
++import androidx.compose.material3.Icon
++import androidx.compose.material3.OutlinedButton
++import androidx.compose.material3.OutlinedTextField
++import androidx.compose.material3.Scaffold
++import androidx.compose.material3.Text
++import androidx.compose.runtime.Composable
++import androidx.compose.runtime.getValue
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.tooling.preview.Preview
++import androidx.compose.ui.unit.dp
++import androidx.hilt.navigation.compose.hiltViewModel
++import androidx.lifecycle.compose.collectAsStateWithLifecycle
++import com.example.shoppingapp.ui.theme.ShoppingAppTheme
++
++@Composable
++internal fun LoginScreenRoute(modifier: Modifier = Modifier, loginViewModel: LoginViewModel = hiltViewModel()) {
++    val loginUIState by loginViewModel.uiState.collectAsStateWithLifecycle()
++    LoginScreen(modifier = modifier, loginUIState = loginUIState,
++        onEmailValueChange = loginViewModel::onEmailChange,
++        onPasswordValueChange = loginViewModel::onPasswordChange)
++}
++@OptIn(ExperimentalMaterial3Api::class)
++@Composable
++fun LoginScreen(
++    modifier: Modifier = Modifier,
++    loginUIState: LoginUIState,
++    onEmailValueChange: (String) -> Unit,
++    onPasswordValueChange: (String) -> Unit) {
++    Scaffold {
++        Content(modifier = modifier.padding(it),
++            loginUIState = loginUIState,
++            onEmailValueChange = onEmailValueChange,
++            onPasswordValueChange = onPasswordValueChange)
++    }
++}
++
++@OptIn(ExperimentalMaterial3Api::class)
++@Composable
++private fun Content(modifier: Modifier = Modifier,
++                    loginUIState: LoginUIState,
++                    onEmailValueChange: (String) -> Unit,
++                    onPasswordValueChange: (String) -> Unit) {
++    Column(modifier = modifier.fillMaxSize().padding(horizontal = 24.dp),
++        verticalArrangement = Arrangement.Center,
++        horizontalAlignment = Alignment.CenterHorizontally) {
++        Text("Login Screen")
++        Spacer(modifier = Modifier.height(24.dp))
++        OutlinedTextField(
++            label = {
++                Text(text = "Email")
++            },
++            leadingIcon = {
++                Icon(
++                    imageVector = Icons.Filled.Email,
++                    contentDescription = "Email"
++                )
++            },
++
++            value = loginUIState.email,
++            onValueChange = onEmailValueChange
++        )
++
++        Spacer(modifier = Modifier.height(8.dp))
++        OutlinedTextField(
++            label = {
++                Text(text = "Password")
++            },
++            leadingIcon = {
++                Icon(
++                    imageVector = Icons.Filled.Lock,
++                    contentDescription = "Password"
++                )
++            },
++            value = loginUIState.password,
++            onValueChange = onPasswordValueChange
++        )
++        Spacer(modifier = Modifier.height(8.dp))
++        OutlinedButton(onClick = {}) {
++            Text(text = "Login")
++        }
++        Spacer(modifier = Modifier.height(8.dp))
++        Divider()
++        Spacer(modifier = Modifier.height(8.dp))
++
++        OutlinedButton(onClick = {}) {
++            Text(text = "Google Sign In")
++        }
++    }
++}
++
++@Preview(showBackground = true)
++@Composable
++fun LoginScreenPreview() {
++    ShoppingAppTheme {
++        Content(
++            loginUIState = LoginUIState(password = "123", email = "compose"),
++            onEmailValueChange = {},
++            onPasswordValueChange = {})
++    }
+ }
+\ No newline at end of file
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    id(\"com.android.application\")\r\n    id(\"org.jetbrains.kotlin.android\")\r\n    kotlin(\"kapt\")\r\n    id(\"com.google.dagger.hilt.android\")\r\n}\r\n\r\nandroid {\r\n    namespace = \"com.example.shoppingapp\"\r\n    compileSdk = 33\r\n\r\n    defaultConfig {\r\n        applicationId = \"com.example.shoppingapp\"\r\n        minSdk = 24\r\n        targetSdk = 33\r\n        versionCode = 1\r\n        versionName = \"1.0\"\r\n\r\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\r\n        vectorDrawables {\r\n            useSupportLibrary = true\r\n        }\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            isMinifyEnabled = false\r\n            proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")\r\n        }\r\n    }\r\n    compileOptions {\r\n        sourceCompatibility = JavaVersion.VERSION_17\r\n        targetCompatibility = JavaVersion.VERSION_17\r\n    }\r\n    kotlinOptions {\r\n        jvmTarget = \"17\"\r\n    }\r\n    buildFeatures {\r\n        compose = true\r\n    }\r\n    composeOptions {\r\n        kotlinCompilerExtensionVersion = \"1.4.3\"\r\n    }\r\n    packaging {\r\n        resources {\r\n            excludes += \"/META-INF/{AL2.0,LGPL2.1}\"\r\n        }\r\n    }\r\n}\r\n\r\ndependencies {\r\n\r\n    implementation(\"androidx.core:core-ktx:1.9.0\")\r\n    implementation(\"androidx.lifecycle:lifecycle-runtime-ktx:2.6.1\")\r\n    implementation(\"androidx.activity:activity-compose:1.7.0\")\r\n    implementation(platform(\"androidx.compose:compose-bom:2023.03.00\"))\r\n    implementation(\"androidx.compose.ui:ui\")\r\n    implementation(\"androidx.compose.ui:ui-graphics\")\r\n    implementation(\"androidx.compose.ui:ui-tooling-preview\")\r\n    implementation(\"androidx.compose.material3:material3\")\r\n    testImplementation(\"junit:junit:4.13.2\")\r\n    androidTestImplementation(\"androidx.test.ext:junit:1.1.5\")\r\n    androidTestImplementation(\"androidx.test.espresso:espresso-core:3.5.1\")\r\n    androidTestImplementation(platform(\"androidx.compose:compose-bom:2023.03.00\"))\r\n    androidTestImplementation(\"androidx.compose.ui:ui-test-junit4\")\r\n    debugImplementation(\"androidx.compose.ui:ui-tooling\")\r\n    debugImplementation(\"androidx.compose.ui:ui-test-manifest\")\r\n\r\n    //firebase\r\n    implementation (\"com.google.firebase:firebase-firestore-ktx:24.6.0\")\r\n    implementation (\"com.google.firebase:firebase-storage-ktx:20.2.0\")\r\n    implementation (\"com.google.firebase:firebase-auth-ktx\")\r\n    implementation (platform(\"com.google.firebase:firebase-bom:32.0.0\"))\r\n\r\n    //Dagger - Hilt\r\n    implementation (\"com.google.dagger:hilt-android:2.44\")\r\n    kapt (\"com.google.dagger:hilt-android-compiler:2.44\")\r\n\r\n    //material icons - use with caution!\r\n    implementation (\"androidx.compose.material:material-icons-extended:1.2.0\")\r\n    // Coroutines\r\n    implementation (\"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1\")\r\n    implementation (\"org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1\")\r\n    implementation (\"org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.1\")\r\n\r\n    // Coroutine Lifecycle Scopes\r\n    implementation (\"androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1\")\r\n    implementation (\"androidx.lifecycle:lifecycle-runtime-ktx:2.5.1\")\r\n\r\n    // Coil\r\n    implementation(\"io.coil-kt:coil-compose:1.4.0\")\r\n\r\n    // Retrofit\r\n    implementation (\"com.squareup.retrofit2:retrofit:2.9.0\")\r\n\r\n    // OkHttp\r\n    implementation(\"com.squareup.okhttp3:okhttp:5.0.0-alpha.2\")\r\n\r\n    // JSON Converter\r\n    implementation (\"com.squareup.retrofit2:converter-gson:2.9.0\")\r\n    implementation (\"androidx.navigation:navigation-compose:2.5.1\")\r\n\r\n    //interceptor\r\n    implementation (\"com.squareup.okhttp3:logging-interceptor:4.10.0\")\r\n\r\n    //dataStore\r\n    implementation(\"androidx.datastore:datastore-preferences:1.0.0\")\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision 6d3e6c25cdb171c0010501ff2a6341a265878962)
++++ b/app/build.gradle.kts	(date 1685478864010)
+@@ -75,6 +75,7 @@
+     //Dagger - Hilt
+     implementation ("com.google.dagger:hilt-android:2.44")
+     kapt ("com.google.dagger:hilt-android-compiler:2.44")
++    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+ 
+     //material icons - use with caution!
+     implementation ("androidx.compose.material:material-icons-extended:1.2.0")
+@@ -105,4 +106,18 @@
+ 
+     //dataStore
+     implementation("androidx.datastore:datastore-preferences:1.0.0")
++
++    //navigation
++    implementation("androidx.navigation:navigation-compose:2.5.3")
++
++    //lifecycle compose
++    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
++    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
++
++    implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
++    implementation("com.google.firebase:firebase-analytics-ktx")
++
++    implementation("com.google.firebase:firebase-auth")
++
++    implementation("com.google.android.gms:play-services-auth:20.5.0")
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/example/shoppingapp/feature/mainappstate/MainApp.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.shoppingapp.feature.mainappstate\r\n\r\nclass MainApp {\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/shoppingapp/feature/mainappstate/MainApp.kt b/app/src/main/java/com/example/shoppingapp/feature/mainappstate/MainApp.kt
+--- a/app/src/main/java/com/example/shoppingapp/feature/mainappstate/MainApp.kt	(revision 6d3e6c25cdb171c0010501ff2a6341a265878962)
++++ b/app/src/main/java/com/example/shoppingapp/feature/mainappstate/MainApp.kt	(date 1685382289069)
+@@ -1,4 +1,21 @@
+ package com.example.shoppingapp.feature.mainappstate
+ 
+-class MainApp {
++import android.annotation.SuppressLint
++import androidx.compose.foundation.layout.padding
++import androidx.compose.material3.ExperimentalMaterial3Api
++import androidx.compose.material3.Scaffold
++import androidx.compose.runtime.Composable
++import androidx.compose.ui.Modifier
++import com.example.shoppingapp.feature.navigation.MainNavHost
++
++@OptIn(ExperimentalMaterial3Api::class)
++@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
++@Composable
++fun MainApp(
++    modifier: Modifier = Modifier,
++    appState: MainAppState = rememberMainAppState()
++) {
++    Scaffold(modifier = modifier) {
++        MainNavHost(navController = appState.navController, modifier = modifier.padding(it))
++    }
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/example/shoppingapp/feature/login/navigation/LoginNavigation.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.shoppingapp.feature.login.navigation\r\n\r\nclass LoginNavigation {\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/shoppingapp/feature/login/navigation/LoginNavigation.kt b/app/src/main/java/com/example/shoppingapp/feature/login/navigation/LoginNavigation.kt
+--- a/app/src/main/java/com/example/shoppingapp/feature/login/navigation/LoginNavigation.kt	(revision 6d3e6c25cdb171c0010501ff2a6341a265878962)
++++ b/app/src/main/java/com/example/shoppingapp/feature/login/navigation/LoginNavigation.kt	(date 1685468340319)
+@@ -1,4 +1,13 @@
+ package com.example.shoppingapp.feature.login.navigation
+ 
+-class LoginNavigation {
++import androidx.navigation.NavGraphBuilder
++import androidx.navigation.compose.composable
++import com.example.shoppingapp.feature.login.LoginScreenRoute
++
++const val loginNavigationRoute = "login_route"
++
++fun NavGraphBuilder.loginScreen() {
++    composable(loginNavigationRoute) {
++        LoginScreenRoute()
++    }
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/example/shoppingapp/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.shoppingapp\r\n\r\nimport android.os.Bundle\r\nimport androidx.activity.ComponentActivity\r\nimport androidx.activity.compose.setContent\r\nimport androidx.compose.foundation.layout.fillMaxSize\r\nimport androidx.compose.material3.MaterialTheme\r\nimport androidx.compose.material3.Surface\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.tooling.preview.Preview\r\nimport com.example.shoppingapp.ui.theme.ShoppingAppTheme\r\n\r\nclass MainActivity : ComponentActivity() {\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContent {\r\n            ShoppingAppTheme {\r\n                // A surface container using the 'background' color from the theme\r\n                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {\r\n                    Greeting(\"Android\")\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n\r\n@Composable\r\nfun Greeting(name: String, modifier: Modifier = Modifier) {\r\n    Text(\r\n            text = \"Hello $name!\",\r\n            modifier = modifier\r\n    )\r\n}\r\n\r\n@Preview(showBackground = true)\r\n@Composable\r\nfun GreetingPreview() {\r\n    ShoppingAppTheme {\r\n        Greeting(\"Android\")\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/shoppingapp/MainActivity.kt b/app/src/main/java/com/example/shoppingapp/MainActivity.kt
+--- a/app/src/main/java/com/example/shoppingapp/MainActivity.kt	(revision 6d3e6c25cdb171c0010501ff2a6341a265878962)
++++ b/app/src/main/java/com/example/shoppingapp/MainActivity.kt	(date 1685380842457)
+@@ -10,6 +10,7 @@
+ import androidx.compose.runtime.Composable
+ import androidx.compose.ui.Modifier
+ import androidx.compose.ui.tooling.preview.Preview
++import com.example.shoppingapp.feature.mainappstate.MainApp
+ import com.example.shoppingapp.ui.theme.ShoppingAppTheme
+ 
+ class MainActivity : ComponentActivity() {
+@@ -19,25 +20,9 @@
+             ShoppingAppTheme {
+                 // A surface container using the 'background' color from the theme
+                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+-                    Greeting("Android")
++                    MainApp()
+                 }
+             }
+         }
+     }
+-}
+-
+-@Composable
+-fun Greeting(name: String, modifier: Modifier = Modifier) {
+-    Text(
+-            text = "Hello $name!",
+-            modifier = modifier
+-    )
+-}
+-
+-@Preview(showBackground = true)
+-@Composable
+-fun GreetingPreview() {
+-    ShoppingAppTheme {
+-        Greeting("Android")
+-    }
+ }
+\ No newline at end of file
+Index: .idea/inspectionProfiles/Project_Default.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/inspectionProfiles/Project_Default.xml b/.idea/inspectionProfiles/Project_Default.xml
+new file mode 100644
+--- /dev/null	(date 1685479714058)
++++ b/.idea/inspectionProfiles/Project_Default.xml	(date 1685479714058)
+@@ -0,0 +1,41 @@
++<component name="InspectionProjectProfileManager">
++  <profile version="1.0">
++    <option name="myName" value="Project Default" />
++    <inspection_tool class="PreviewAnnotationInFunctionWithParameters" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewApiLevelMustBeValid" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewDimensionRespectsLimit" enabled="true" level="WARNING" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewFontScaleMustBeGreaterThanZero" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewMultipleParameterProviders" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewMustBeTopLevelFunction" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewNeedsComposableAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewNotSupportedInUnitTestFiles" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++    <inspection_tool class="PreviewPickerAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
++      <option name="composableFile" value="true" />
++      <option name="previewFile" value="true" />
++    </inspection_tool>
++  </profile>
++</component>
+\ No newline at end of file
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+new file mode 100644
+--- /dev/null	(date 1685298346158)
++++ b/.idea/vcs.xml	(date 1685298346158)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+Index: app/src/main/java/com/example/shoppingapp/feature/navigation/MainNavHost.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.shoppingapp.feature.navigation\r\n\r\nclass MainNavHost {\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/shoppingapp/feature/navigation/MainNavHost.kt b/app/src/main/java/com/example/shoppingapp/feature/navigation/MainNavHost.kt
+--- a/app/src/main/java/com/example/shoppingapp/feature/navigation/MainNavHost.kt	(revision 6d3e6c25cdb171c0010501ff2a6341a265878962)
++++ b/app/src/main/java/com/example/shoppingapp/feature/navigation/MainNavHost.kt	(date 1685468455736)
+@@ -1,4 +1,16 @@
+ package com.example.shoppingapp.feature.navigation
+ 
+-class MainNavHost {
++import androidx.compose.runtime.Composable
++import androidx.compose.ui.Modifier
++import androidx.navigation.NavHostController
++import androidx.navigation.compose.NavHost
++import com.example.shoppingapp.feature.login.navigation.loginNavigationRoute
++import com.example.shoppingapp.feature.login.navigation.loginScreen
++
++
++@Composable
++fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier, startDestination: String = loginNavigationRoute) {
++    NavHost(navController = navController, modifier = modifier, startDestination = startDestination) {
++        loginScreen()
++    }
+ }
+\ No newline at end of file

@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -67,10 +68,10 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //firebase
-    implementation ("com.google.firebase:firebase-firestore-ktx:24.6.0")
-    implementation ("com.google.firebase:firebase-storage-ktx:20.2.0")
-    implementation ("com.google.firebase:firebase-auth-ktx")
-    implementation (platform("com.google.firebase:firebase-bom:32.0.0"))
+    implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.android.gms:play-services-auth:20.5.0")
 
     //Dagger - Hilt
     implementation ("com.google.dagger:hilt-android:2.44")

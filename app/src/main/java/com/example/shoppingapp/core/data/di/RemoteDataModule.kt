@@ -1,6 +1,7 @@
 package com.example.shoppingapp.core.data.di
 
 import com.example.shoppingapp.core.data.remote.api.AuthService
+import com.google.firebase.FirebaseApp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

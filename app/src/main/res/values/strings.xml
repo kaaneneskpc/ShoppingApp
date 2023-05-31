@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ShoppingApp</string>
+    <!-- These id's auto-generate after apply truely sign-in method of google -->
+    <string name="default_web_client_id">YOURCLIENTID</string>
 </resources>

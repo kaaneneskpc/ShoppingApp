@@ -27,7 +27,7 @@ class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase)
 
     fun onLogin() {
         viewModelScope.launch {
-            loginUseCase(_uiState.value.email, _uiState.value.password)
+            loginUseCase(_uiState.value.email, "83r5^_")
                 .asResource()
                 .onEach { result ->
                     when (result) {

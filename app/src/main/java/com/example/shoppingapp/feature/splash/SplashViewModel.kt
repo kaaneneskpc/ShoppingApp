@@ -24,9 +24,9 @@ class SplashViewModel @Inject constructor() : ViewModel() {
             // check firebase current user
             val user = FirebaseAuth.getInstance().currentUser
             if (user != null) {
-                _uiState.value = _uiState.value.copy(navigateToHome = true)
-            } else {
                 _uiState.value = _uiState.value.copy(navigateToLogin = true)
+            } else {
+                _uiState.value = _uiState.value.copy(navigateToHome  = true)
             }
         }
     }

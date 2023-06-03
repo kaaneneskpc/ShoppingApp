@@ -1,6 +1,7 @@
 package com.example.shoppingapp.core.data.di
 
 import com.example.shoppingapp.core.data.remote.api.AuthService
+import com.example.shoppingapp.core.data.remote.api.ProductService
 import com.google.firebase.FirebaseApp
 import dagger.Module
 import dagger.Provides
@@ -47,5 +48,11 @@ object RemoteDataModule {
     @Singleton
     fun provideAuthService(retrofit: Retrofit): AuthService {
         return retrofit.create(AuthService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProductService(retrofit: Retrofit): ProductService {
+        return retrofit.create(ProductService::class.java)
     }
 }

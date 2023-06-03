@@ -1,10 +1,7 @@
-package com.example.shoppingapp.feature.login
-
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.shoppingapp.R
+import com.example.shoppingapp.feature.login.LoginUIState
+import com.example.shoppingapp.feature.login.LoginViewModel
 import com.example.shoppingapp.ui.theme.ShoppingAppTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -51,11 +50,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 @Composable
-internal fun LoginScreenRoute(modifier: Modifier = Modifier, loginViewModel: LoginViewModel = hiltViewModel()) {
-    val loginUIState by loginViewModel.uiState.collectAsStateWithLifecycle()
+internal fun LoginScreenRoute(
+    modifier: Modifier = Modifier,
+    viewModel: LoginViewModel = hiltViewModel()
+) {
+    val loginUiState by viewModel.uiState.collectAsStateWithLifecycle()
     val token = stringResource(id = R.string.default_web_client_id)
-    val context = LocalContext.current
     var user by remember { mutableStateOf(FirebaseAuth.getInstance().currentUser) }
+    val context = LocalContext.current
     val launcher = rememberFirebaseAuthLauncher(
         onAuthComplete = { result ->
             user = result.user
@@ -66,10 +68,12 @@ internal fun LoginScreenRoute(modifier: Modifier = Modifier, loginViewModel: Log
             Toast.makeText(context, "Error ${it.message}", Toast.LENGTH_SHORT).show()
         }
     )
-    LoginScreen(modifier = modifier, loginUIState = loginUIState,
-        onEmailValueChange = loginViewModel::onEmailChange,
-        onPasswordValueChange = loginViewModel::onPasswordChange,
-        onLoginClick = loginViewModel::onLogin,
+
+    LoginScreen(
+        modifier = modifier, loginUiState = loginUiState,
+        onEmailValueChange = viewModel::onEmailChange,
+        onPasswordValueChange = viewModel::onPasswordChange,
+        onLoginClick = viewModel::onLogin,
         onGoogleSignInClick = {
             val googleSignIn = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(token)
@@ -77,43 +81,55 @@ internal fun LoginScreenRoute(modifier: Modifier = Modifier, loginViewModel: Log
                 .build()
             val client = GoogleSignIn.getClient(context, googleSignIn)
             launcher.launch(client.signInIntent)
-        })
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LoginScreen(
-    modifier: Modifier = Modifier,
-    loginUIState: LoginUIState,
-    onEmailValueChange: (String) -> Unit,
-    onPasswordValueChange: (String) -> Unit,
-    onLoginClick: () -> Unit,
-    onGoogleSignInClick: () -> Unit) {
-    Scaffold {
-        Content(modifier = modifier.padding(it),
-            loginUIState = loginUIState,
-            onEmailValueChange = onEmailValueChange,
-            onPasswordValueChange = onPasswordValueChange,
-            onLoginClick = onLoginClick,
-            onGoogleSignInClick = onGoogleSignInClick)
-    }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Content(modifier: Modifier = Modifier,
-                    loginUIState: LoginUIState,
-                    onEmailValueChange: (String) -> Unit,
-                    onPasswordValueChange: (String) -> Unit,
-                    onLoginClick: () ->Unit,
-                    onGoogleSignInClick: () -> Unit) {
-    Column(modifier = modifier.fillMaxSize().padding(horizontal = 24.dp),
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    loginUiState: LoginUIState,
+    onEmailValueChange: (String) -> Unit,
+    onPasswordValueChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onGoogleSignInClick: () -> Unit
+) {
+    Scaffold {
+        Content(
+            modifier = modifier.padding(it),
+            loginUiState = loginUiState,
+            onEmailValueChange = onEmailValueChange,
+            onPasswordValueChange = onPasswordValueChange,
+            onLoginClick = onLoginClick,
+            onGoogleSignInClick = onGoogleSignInClick
+        )
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Content(
+    modifier: Modifier = Modifier, loginUiState: LoginUIState,
+    onEmailValueChange: (String) -> Unit,
+    onPasswordValueChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onGoogleSignInClick: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally) {
-        AnimatedVisibility(visible = loginUIState.loading) {
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AnimatedVisibility(visible = loginUiState.loading) {
             CircularProgressIndicator()
         }
-        Text("Login Screen")
+        Text(text = "Login Screen")
         Spacer(modifier = Modifier.height(24.dp))
+
         OutlinedTextField(
             label = {
                 Text(text = "Email")
@@ -124,7 +140,7 @@ private fun Content(modifier: Modifier = Modifier,
                     contentDescription = "Email"
                 )
             },
-            value = loginUIState.email,
+            value = loginUiState.email,
             onValueChange = onEmailValueChange
         )
 
@@ -140,7 +156,7 @@ private fun Content(modifier: Modifier = Modifier,
                 )
             },
             visualTransformation = PasswordVisualTransformation(),
-            value = loginUIState.password,
+            value = loginUiState.password,
             onValueChange = onPasswordValueChange
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -161,12 +177,13 @@ private fun Content(modifier: Modifier = Modifier,
 fun rememberFirebaseAuthLauncher(
     onAuthComplete: (AuthResult) -> Unit,
     onError: (Exception) -> Unit
-): ManagedActivityResultLauncher<Intent, ActivityResult> {
+): ManagedActivityResultLauncher<Intent, androidx.activity.result.ActivityResult> {
     val scope = rememberCoroutineScope()
     return rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
-            val account = task.getResult(ApiException::class.java)?: throw Exception("Google Sign In Failed")
+            val account =
+                task.getResult(ApiException::class.java) ?: throw Exception("Google Sign In Failed")
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             scope.launch {
                 val authResult = FirebaseAuth.getInstance().signInWithCredential(credential).await()
@@ -178,15 +195,15 @@ fun rememberFirebaseAuthLauncher(
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    ShoppingAppTheme {
+    ShoppingAppTheme{
         Content(
-            loginUIState = LoginUIState(password = "123", email = "compose"),
+            loginUiState = LoginUIState(password = "123", email = "compose"),
             onEmailValueChange = {},
             onPasswordValueChange = {},
-            onGoogleSignInClick = {},
-            onLoginClick = {})
+            onGoogleSignInClick = {}, onLoginClick = {})
     }
 }

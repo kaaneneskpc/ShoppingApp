@@ -1,8 +1,8 @@
 package com.example.shoppingapp.feature.login.navigation
 
+import LoginScreenRoute
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.shoppingapp.feature.login.LoginScreenRoute
 
 const val loginNavigationRoute = "login_route"
 

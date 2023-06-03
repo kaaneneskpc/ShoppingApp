@@ -17,6 +17,7 @@ Shopping App with Using Kotlin Jetpack Libraries
 <li><a href="https://developer.android.com/jetpack">Jetpack Libraries</a> Navigation, Fragment, DataBinding and more </li>
 <li><a href="https://developer.android.com/studio/test">Testing</a> ViewModel, LiveData, DataBinding and more component are testing for best result of app (Adding soon) </li>
 <li><a href="https://github.com/bumptech/glide">Glide</a> An image loading and caching library for Android focused on smooth scrolling </li>
+  <li><a href="https://firebase.google.com/">Firebase</a> Firebase is an app development platform that helps you build and grow apps and games users love. Backed by Google and trusted by millions of businesses around the world. </li>
 </ul>
 
 # ScreenRecord 📷 
